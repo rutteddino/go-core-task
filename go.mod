@@ -1,3 +1,3 @@
-module github.com/rutteddino/idk-task
+module github.com/rutteddino/go-core-task
 
 go 1.27.3
