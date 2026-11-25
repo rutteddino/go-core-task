@@ -13,9 +13,9 @@ func main() {
 }
 
 // GetSlicesDiff возвращает элементы из первого слайса (s1), которых нет во втором (s2).
-func GetSlicesDiff(s1, s2 []string) []string {
-	result := make([]string, 0)
-	set := make(map[string]struct{})
+func GetSlicesDiff[T comparable](s1, s2 []T) []T {
+	result := make([]T, 0)
+	set := make(map[T]struct{})
 
 	for _, v := range s2 {
 		set[v] = struct{}{}

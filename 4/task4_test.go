@@ -5,7 +5,26 @@ import (
 	"testing"
 )
 
-func TestGetSlicesDiff(t *testing.T) {
+// testGetSlicesDiff — обобщённый помощник для табличных тестов GetSlicesDiff
+// с произвольным comparable-типом.
+func testGetSlicesDiff[T comparable](t *testing.T, tests []struct {
+	name string
+	s1   []T
+	s2   []T
+	want []T
+}) {
+	t.Helper()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetSlicesDiff(tt.s1, tt.s2)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetSlicesDiff(%v, %v) = %v; ожидалось %v", tt.s1, tt.s2, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetSlicesDiffString(t *testing.T) {
 	tests := []struct {
 		name string
 		s1   []string
@@ -92,12 +111,88 @@ func TestGetSlicesDiff(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := GetSlicesDiff(tt.s1, tt.s2)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSlicesDiff(%v, %v) = %v; ожидалось %v", tt.s1, tt.s2, got, tt.want)
-			}
-		})
+	testGetSlicesDiff(t, tests)
+}
+
+func TestGetSlicesDiffInt(t *testing.T) {
+	tests := []struct {
+		name string
+		s1   []int
+		s2   []int
+		want []int
+	}{
+		{
+			name: "базовый случай",
+			s1:   []int{1, 2, 3, 4, 5},
+			s2:   []int{2, 4},
+			want: []int{1, 3, 5},
+		},
+		{
+			name: "отрицательные числа и ноль",
+			s1:   []int{-1, 0, 1},
+			s2:   []int{0},
+			want: []int{-1, 1},
+		},
+		{
+			name: "дубликаты сохраняются",
+			s1:   []int{7, 7, 8},
+			s2:   []int{8},
+			want: []int{7, 7},
+		},
+		{
+			name: "nil-срезы",
+			s1:   nil,
+			s2:   nil,
+			want: []int{},
+		},
 	}
+
+	testGetSlicesDiff(t, tests)
+}
+
+// point — пользовательский comparable-тип для проверки работы со структурами.
+type point struct {
+	X, Y int
+}
+
+func TestGetSlicesDiffStruct(t *testing.T) {
+	tests := []struct {
+		name string
+		s1   []point
+		s2   []point
+		want []point
+	}{
+		{
+			name: "сравнение структур по значению",
+			s1:   []point{{1, 2}, {3, 4}, {5, 6}},
+			s2:   []point{{3, 4}},
+			want: []point{{1, 2}, {5, 6}},
+		},
+		{
+			name: "нулевые структуры",
+			s1:   []point{{}, {1, 1}},
+			s2:   []point{{}},
+			want: []point{{1, 1}},
+		},
+	}
+
+	testGetSlicesDiff(t, tests)
+}
+
+func TestGetSlicesDiffBool(t *testing.T) {
+	tests := []struct {
+		name string
+		s1   []bool
+		s2   []bool
+		want []bool
+	}{
+		{
+			name: "булевы значения",
+			s1:   []bool{true, false, true},
+			s2:   []bool{false},
+			want: []bool{true, true},
+		},
+	}
+
+	testGetSlicesDiff(t, tests)
 }
